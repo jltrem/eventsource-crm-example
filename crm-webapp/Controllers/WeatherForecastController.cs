@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SimpleCQRS;
 
-namespace crm_webapp.Controllers
+namespace CRM.Webapp.Controllers
 {
    [ApiController]
    [Route("[controller]")]
@@ -18,7 +19,14 @@ namespace crm_webapp.Controllers
 
       private readonly ILogger<WeatherForecastController> _logger;
 
-      public WeatherForecastController(ILogger<WeatherForecastController> logger)
+
+      public class FooBarBaz
+      {
+         public string Gigem { get; set; }
+         public DateTimeOffset Booya { get; set; }
+      }
+
+      public WeatherForecastController(ILogger<WeatherForecastController> logger, IEventStore eventStore)
       {
          _logger = logger;
       }

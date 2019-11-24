@@ -1,6 +1,6 @@
 using System;
 
-namespace crm_webapp
+namespace CRM.Webapp
 {
    public class WeatherForecast
    {
