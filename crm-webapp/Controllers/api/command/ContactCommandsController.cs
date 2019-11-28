@@ -10,7 +10,7 @@ using System.Net.Mime;
 
 namespace CRM.Webapp.Controllers.api
 {
-   [Route("api/command/customer")]
+   [Route("api/command/contact")]
    [ApiController]
    public class ContactCommandsController : ControllerBase
    {
