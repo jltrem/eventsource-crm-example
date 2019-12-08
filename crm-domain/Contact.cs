@@ -12,6 +12,8 @@ namespace CRM.Domain
    {
       public PersonalName Name { get; private set; }
 
+      public Map<Guid, PhoneNumber> Phones { get; private set; }
+
       public Contact(Seq<Event> history) 
          : base(history, (a, i, e) => Apply(a, i, e))
       {
@@ -36,6 +38,10 @@ namespace CRM.Domain
 
             case ContactRenamed renamed:
                contact.Name = renamed.Name;
+               break;
+
+            case ContactPhoneAdded phoneAdded:
+               contact.Phones = contact.Phones.Add(phoneAdded.PhoneId, phoneAdded.Phone);
                break;
 
             default:

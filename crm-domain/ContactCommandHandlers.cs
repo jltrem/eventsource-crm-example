@@ -22,11 +22,9 @@ namespace CRM.Domain
                bus.Subscribe<ReadContact>(Handle),
                bus.Subscribe<CreateContact>(Handle),
                bus.Subscribe<RenameContact>(Handle),
+               bus.Subscribe<AddContactPhone>(Handle),
             });
       }
-
-      public void Dispose() =>
-         _subscriptions.Iter(x => x.Dispose());
 
       public void Handle(ReadContact cmd) =>
          UseRepo(repo =>
@@ -44,17 +42,27 @@ namespace CRM.Domain
                .Apply(cmd.Result.Set));
 
       public void Handle(RenameContact cmd) =>
+         Update(cmd, () => new ContactRenamed(cmd.Name));
+
+      public void Handle(AddContactPhone cmd) =>
+         Update(cmd, () => new ContactPhoneAdded(cmd.DetailId, cmd.Phone));
+
+
+      private void Update(Command cmd, Func<IEventData> newEventData) =>
          UseRepo(repo =>
             repo.LoadExpectedVersion(cmd, cmd.OriginalVersion)
                .Bind(aggregate =>
-                  {
-                     (var contact, var history) = aggregate;
-                     return new ContactRenamed(cmd.Name)
-                        .Apply(x => new Event(Info(cmd, contact.Info.Version + 1), UtcNow(), Owner(), x))
-                        .Apply(x => new Contact(history, x))
-                        .Apply(repo.Save);                     
-                  })
+               {
+                  (var contact, var history) = aggregate;
+                  return newEventData()
+                     .Apply(x => new Event(Info(cmd, contact.Info.Version + 1), UtcNow(), Owner(), x))
+                     .Apply(x => new Contact(history, x))
+                     .Apply(repo.Save);
+               })
                .Apply(x => new CommandResult(cmd, x))
                .Apply(cmd.Result.Set));
+
+      public void Dispose() =>
+         _subscriptions.Iter(x => x.Dispose());
    }
 }

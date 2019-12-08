@@ -40,20 +40,20 @@ namespace CRM.Domain
    
    public sealed class AddContactPhone : DetailCommand
    {
-      public PhoneNumber PhoneNumber { get; }
+      public PhoneNumber Phone { get; }
 
-      public AddContactPhone(Guid contactId, int originalVersion, PhoneType type, string number, string ext) 
+      public AddContactPhone(Guid contactId, int originalVersion, PhoneNumber phone)
          : base(contactId, originalVersion) =>
-            PhoneNumber = new PhoneNumber(type, number, ext);     
+            Phone = phone;
    }
 
    public sealed class UpdateContactPhone : DetailCommand
    {
-      public PhoneNumber PhoneNumber { get; }
+      public PhoneNumber Phone { get; }
 
-      public UpdateContactPhone(Guid contactId, int originalVersion, Guid phoneId, PhoneNumber phoneNumber) 
+      public UpdateContactPhone(Guid contactId, int originalVersion, Guid phoneId, PhoneNumber phone) 
          : base(contactId, phoneId, originalVersion) =>
-            PhoneNumber = phoneNumber;
+            Phone = phone;
    }
 
    public sealed class DeleteContactPhone : DetailCommand
