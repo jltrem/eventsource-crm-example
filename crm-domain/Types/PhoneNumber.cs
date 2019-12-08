@@ -19,9 +19,20 @@ namespace CRM.Domain.Types
       public string Number { get; }
       public string Ext { get; }
 
-      public PhoneNumber(PhoneType type, string number, string ext)
+      public PhoneNumber(string phoneType, string number, string ext)
       {
-         PhoneType = type; // TODO: validate range
+         PhoneType = Enum.TryParse(phoneType, true, out PhoneType type)
+            ? type
+            : PhoneType.Unknown;
+
+         Number = ThrowIfEmpty(number, "number");
+         Ext = Trim(ext);
+      }
+
+      [Newtonsoft.Json.JsonConstructor]
+      public PhoneNumber(PhoneType phoneType, string number, string ext)
+      {
+         PhoneType = phoneType; // TODO: validate range
          Number = ThrowIfEmpty(number, "number");
          Ext = Trim(ext);        
       }

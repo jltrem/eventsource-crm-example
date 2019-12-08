@@ -21,7 +21,7 @@ namespace CRM.Webapp.Controllers.api
          _bus = bus;
       }
 
-      [HttpPost]
+      [HttpPost("create")]
       [Consumes(MediaTypeNames.Application.Json)]
       [ProducesResponseType(StatusCodes.Status201Created)]
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -41,7 +41,7 @@ namespace CRM.Webapp.Controllers.api
            Left: error => BadRequest(error) as ActionResult);
       }
 
-      [HttpPut("{rootId}")]
+      [HttpPut("{rootId}/rename")]
       [Consumes(MediaTypeNames.Application.Json)]
       [ProducesResponseType(StatusCodes.Status200OK)]
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -49,6 +49,26 @@ namespace CRM.Webapp.Controllers.api
       {
          var cmd = new Domain.Types.PersonalName(model.Given, model.Middle, model.Family)
             .Apply(x => new Domain.RenameContact(rootId, model.OriginalVersion, x));
+
+         var sent = _bus.Send(cmd);
+
+         var result = await cmd.Result.Wait();
+
+         return result.Value.Match(
+           Right: _ => Ok(),
+
+           // TODO: don't bubble up any native exception messages
+           Left: error => BadRequest(error) as ActionResult);
+      }
+
+      [HttpPost("{rootId}/add-phone")]
+      [Consumes(MediaTypeNames.Application.Json)]
+      [ProducesResponseType(StatusCodes.Status200OK)]
+      [ProducesResponseType(StatusCodes.Status400BadRequest)]
+      public async Task<ActionResult> AddPhone(Guid rootId, [FromBody] AddPhone model)
+      {
+         var cmd = new Domain.Types.PhoneNumber(model.PhoneType, model.Number, model.Ext)
+            .Apply(x => new Domain.AddContactPhone(rootId, model.OriginalVersion, x));
 
          var sent = _bus.Send(cmd);
 
@@ -71,7 +91,13 @@ namespace CRM.Webapp.Controllers.api
          return result.Value.Match(
 
            // TODO: make a nice DTO to expose
-           Right: contact => new JsonResult(new { aggregate = contact.Item1, events = contact.Item2 }),
+           Right: contact =>
+           {
+              var json = Newtonsoft.Json.JsonConvert.SerializeObject(contact.Item1);
+              return Content(json, "application/json");
+              //new JsonResult(new { aggregate = contact.Item1, events = contact.Item2 })
+           },
+           
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
@@ -85,8 +111,18 @@ namespace CRM.Webapp.Controllers.api
       public string Middle { get; set; }
       public string Family { get; set; }
    }
+
    public class RenameContact : CreateContact
    {
       public int OriginalVersion { get; set; }
    }
+
+   public class AddPhone
+   {
+      public int OriginalVersion { get; set; }
+      public string PhoneType { get; set; }
+      public string Number { get; set; }
+      public string Ext { get; set; }
+   }
+
 }
