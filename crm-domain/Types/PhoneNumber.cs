@@ -13,7 +13,7 @@ namespace CRM.Domain.Types
       Home = 3
    }
 
-   public class PhoneNumber : Record<PhoneNumber>
+   public sealed class PhoneNumber : Record<PhoneNumber>
    {
       public PhoneType PhoneType { get; }
       public string Number { get; }

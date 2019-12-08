@@ -16,10 +16,9 @@ namespace CRM.Webapp.Migrations
                     AggregateName = table.Column<string>(maxLength: 40, nullable: true),
                     EventName = table.Column<string>(maxLength: 40, nullable: true),
                     EventVersion = table.Column<int>(nullable: false),
-                    DataType = table.Column<string>(nullable: true),
-                    Data = table.Column<string>(nullable: true),
+                    EventData = table.Column<string>(nullable: true),
                     Timestamp = table.Column<DateTimeOffset>(nullable: false),
-                    Owner = table.Column<string>(nullable: true)
+                    Owner = table.Column<string>(maxLength: 40, nullable: true)
                 },
                 constraints: table =>
                 {

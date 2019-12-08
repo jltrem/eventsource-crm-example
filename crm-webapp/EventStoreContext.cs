@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using LanguageExt;
+using static LanguageExt.Prelude;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CRM.Webapp
 {
@@ -10,13 +14,32 @@ namespace CRM.Webapp
    {
       public DbSet<AggregateEvent> AggregateEvents { get; set; }
 
+      private readonly Map<string, int> _nameMaxLengthMap;
+
       public EventStoreContext(DbContextOptions<EventStoreContext> options) : base(options)
       {
+         _nameMaxLengthMap = 
+            new[]
+            {
+               (nameof(AggregateEvent.AggregateName), 40),
+               (nameof(AggregateEvent.EventName), 40),
+               (nameof(AggregateEvent.Owner), 40)
+            }
+            .Apply(toMap);
       }
+
+      public Option<int> MaxLength(string propertyName) =>
+         _nameMaxLengthMap.ContainsKey(propertyName)
+            ? Some(_nameMaxLengthMap[propertyName])
+            : None;
+
+      public int UnsafeMaxLength(string propertyName) =>
+         _nameMaxLengthMap[propertyName];
 
       protected override void OnModelCreating(ModelBuilder builder)
       {
-         builder.Entity<AggregateEvent>()
+         builder
+            .Entity<AggregateEvent>()
             .HasKey(x => new { x.RootId, x.AggregateVersion });
 
          builder.Entity<AggregateEvent>()
@@ -24,27 +47,30 @@ namespace CRM.Webapp
 
          builder.Entity<AggregateEvent>()
             .HasIndex(x => new { x.Timestamp });
+
+         builder.Entity<AggregateEvent>()
+            .Property(x => x.AggregateName)
+            .HasMaxLength(UnsafeMaxLength(nameof(AggregateEvent.AggregateName)));
+
+         builder.Entity<AggregateEvent>()
+            .Property(x => x.EventName)
+            .HasMaxLength(UnsafeMaxLength(nameof(AggregateEvent.EventName)));
+
+         builder.Entity<AggregateEvent>()
+            .Property(x => x.Owner)
+            .HasMaxLength(UnsafeMaxLength(nameof(AggregateEvent.Owner)));
       }
    }
 
    public class AggregateEvent
    {
-      public Guid RootId { get; set; }
-      
+      public Guid RootId { get; set; }     
       public int AggregateVersion { get; set; }
-
-      [MaxLength(40)]
       public string AggregateName { get; set; }
-
-      [MaxLength(40)]
       public string EventName { get; set; }
-
       public int EventVersion { get; set; }
-
-      public string Data { get; set; }
-
+      public string EventData { get; set; }
       public DateTimeOffset Timestamp { get; set; }
-
       public string Owner { get; set; }
    }
 }

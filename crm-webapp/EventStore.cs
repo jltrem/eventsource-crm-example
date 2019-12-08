@@ -43,7 +43,7 @@ namespace CRM.Webapp
 
       private Event ToEvent(AggregateEvent aggEvent, Type dtoType)
       {        
-         var dto = JsonConvert.DeserializeObject(aggEvent.Data, dtoType) as IEventData;
+         var dto = JsonConvert.DeserializeObject(aggEvent.EventData, dtoType) as IEventData;
          if (dto == null) throw new Exception($"event could not be deserialized: (rootId={aggEvent.RootId}, version={aggEvent.AggregateVersion})");
 
          var info = new AggregateInfo(aggEvent.AggregateName, aggEvent.RootId, aggEvent.AggregateVersion);
@@ -51,7 +51,7 @@ namespace CRM.Webapp
       }
 
       public Either<string, Unit> AddEvent(Event e) =>
-         Try(() => e.Data.GetType()
+         Try(() => e.EventData.GetType()
             .Apply(dtoType => _registry.EventRevision(dtoType).Match(
                Some: revision =>
                {
@@ -62,7 +62,7 @@ namespace CRM.Webapp
                      AggregateName = e.AggregateInfo.Name,
                      EventName = revision.Name,
                      EventVersion = revision.Version,
-                     Data = JsonConvert.SerializeObject(e.Data, dtoType, new JsonSerializerSettings
+                     EventData = JsonConvert.SerializeObject(e.EventData, dtoType, new JsonSerializerSettings
                      {
                         Formatting = Formatting.None,
                         TypeNameHandling = TypeNameHandling.None

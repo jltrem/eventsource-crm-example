@@ -8,7 +8,7 @@ using static LanguageExt.Prelude;
 
 namespace CRM.Domain
 {
-   public class Contact : Aggregate
+   public sealed class Contact : Aggregate
    {
       public PersonalName Name { get; private set; }
 
@@ -27,7 +27,7 @@ namespace CRM.Domain
          var contact = aggregate as Contact;
          if (contact == null) throw new Exception("Contact.Apply provided invalid aggregate");
 
-         switch (e.Data)
+         switch (e.EventData)
          {
             case ContactCreated created:
                if (version != 1) throw new Exception("event ContactCreated is only valid for version 1");

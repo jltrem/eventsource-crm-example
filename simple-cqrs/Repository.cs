@@ -22,7 +22,7 @@ namespace SimpleCQRS
                : Left<string, (T, Seq<Event>)>("aggregate version is different"));
    }
 
-   public class Repository<T> : IRepository<T> where T : Aggregate
+   public sealed class Repository<T> : IRepository<T> where T : Aggregate
    {
       private readonly IEventStore _storage;
 
@@ -38,7 +38,7 @@ namespace SimpleCQRS
       public Either<string, Unit> Save(T aggregate) =>
          aggregate
             .NewEvents
-            .Map(x => new Event(x.AggregateInfo, x.Timestamp, x.Owner, x.Data))
+            .Map(x => new Event(x.AggregateInfo, x.Timestamp, x.Owner, x.EventData))
             .Map(x => _storage.AddEvent(x))
             .Sequence()
             .Match(

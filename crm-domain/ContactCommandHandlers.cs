@@ -5,7 +5,7 @@ using static LanguageExt.Prelude;
 
 namespace CRM.Domain
 {
-   public class ContactCommandHandlers : CommandHandlers<Contact>, IDisposable
+   public sealed class ContactCommandHandlers : CommandHandlers<Contact>, IDisposable
    {
       public override string Name { get; }
 
@@ -14,7 +14,7 @@ namespace CRM.Domain
       public ContactCommandHandlers(IUseRepo<Contact> useRepo, ICommandBus bus, ITimeService timeService, ISecurityPrincipalService principalService)
          : base(useRepo, timeService.UtcNow, principalService.ActiveUserName)
       {
-         Name = "contact";
+         Name = ContactEvent.AggregateName;
 
          _subscriptions =
             Seq(new[]
