@@ -23,6 +23,7 @@ namespace CRM.Domain
                bus.Subscribe<CreateContact>(Handle),
                bus.Subscribe<RenameContact>(Handle),
                bus.Subscribe<AddContactPhone>(Handle),
+               bus.Subscribe<UpdateContactPhone>(Handle),
             });
       }
 
@@ -47,6 +48,8 @@ namespace CRM.Domain
       public void Handle(AddContactPhone cmd) =>
          Update(cmd, () => new ContactPhoneAdded(cmd.DetailId, cmd.Phone));
 
+      public void Handle(UpdateContactPhone cmd) =>
+         Update(cmd, () => new ContactPhoneUpdated(cmd.DetailId, cmd.Phone));
 
       private void Update(Command cmd, Func<IEventData> newEventData) =>
          UseRepo(repo =>
