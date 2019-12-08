@@ -4,7 +4,7 @@ using SimpleCQRS;
 
 namespace CRM.Domain
 {
-   public class CreateCompany : CreateRootCommand
+   public sealed class CreateCompany : CreateRootCommand
    {
       public CompanyName Name { get; }
 
@@ -12,7 +12,7 @@ namespace CRM.Domain
          Name = name;
    }
 
-   public class RenameCompany : Command
+   public sealed class RenameCompany : Command
    {
       public CompanyName Name { get; }
 
@@ -21,7 +21,7 @@ namespace CRM.Domain
             Name = name;
    }
 
-   public class DeleteCompany : Command
+   public sealed class DeleteCompany : Command
    {
       public DeleteCompany(Guid id, int originalVersion) 
          : base(id, originalVersion)

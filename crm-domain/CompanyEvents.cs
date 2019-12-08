@@ -4,14 +4,16 @@ using SimpleCQRS;
 
 namespace CRM.Domain
 {
-   internal static class CompanyEventName
+   internal static class CompanyEvent
    {
+      public const string AggregateName = "company";
+
       public const string Created = "company-created";
       public const string Renamed = "company-renamed";
    }
 
-   [EventData(CompanyEventName.Created, 1)]
-   public class CompanyCreated : IEventData
+   [EventData(CompanyEvent.Created, 1)]
+   public sealed class CompanyCreated : IEventData
    {
       public CompanyName Name { get; }
 

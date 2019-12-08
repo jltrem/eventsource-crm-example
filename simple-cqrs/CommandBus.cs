@@ -29,7 +29,7 @@ namespace SimpleCQRS
          _commands.Where(x => x is T).Subscribe(x => onNext((T)x));
    }
 
-   public class CommandResult : Record<CommandResult>
+   public sealed class CommandResult : Record<CommandResult>
    {
       public Guid CommandId { get; }
       public Either<string, Unit> Value { get; }
@@ -41,7 +41,7 @@ namespace SimpleCQRS
       }
    }
 
-   public class CommandResult<T> : Record<CommandResult<T>>
+   public sealed class CommandResult<T> : Record<CommandResult<T>>
    {
       public Guid CommandId { get; }
       public T Value { get; }
@@ -53,7 +53,7 @@ namespace SimpleCQRS
       }
    }
 
-   public class ReadCommandResult<T> : Record<CommandResult<T>>
+   public sealed class ReadCommandResult<T> : Record<CommandResult<T>>
    {
       public Guid CommandId { get; }
       public Either<string, (T, Seq<Event>)> Value { get; }

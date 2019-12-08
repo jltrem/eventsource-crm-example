@@ -14,7 +14,7 @@ namespace CRM.Domain.Types
       Billing = 4
    }
 
-   public class PhysicalAddress : Record<PhysicalAddress>
+   public sealed class PhysicalAddress : Record<PhysicalAddress>
    {
       public string Line1 { get; }
       public string Line2 { get; }

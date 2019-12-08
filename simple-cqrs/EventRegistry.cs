@@ -18,25 +18,25 @@ namespace SimpleCQRS
       private readonly Map<string, Type> _revisionTypeMap;
       private readonly Map<string, (string Name, int Version)> _typeRevisionMap;
 
-      public EventRegistry(Seq<(string name, int version, Type type)> mappings)
+      public EventRegistry(Seq<(string eventName, int eventVersion, Type eventDataType)> mappings)
       {
          _revisionTypeMap =
             mappings
-               .Map<(string, Type)>(x => (RevisionKey(x.name, x.version), x.type))
+               .Map<(string, Type)>(x => (RevisionKey(x.eventName, x.eventVersion), x.eventDataType))
                .Apply(x => toMap(x));
 
          _typeRevisionMap =
             mappings
-               .Map<(string, (string, int))>(x => (x.type.AssemblyQualifiedName, (x.name, x.version)))
+               .Map<(string, (string, int))>(x => (x.eventDataType.AssemblyQualifiedName, (x.eventName, x.eventVersion)))
                .Apply(x => toMap(x));
       }
 
-      public Option<Type> EventType(string name, int version) =>
-         Try(() => _revisionTypeMap[RevisionKey(name, version)])
+      public Option<Type> EventType(string eventName, int eventVersion) =>
+         Try(() => _revisionTypeMap[RevisionKey(eventName, eventVersion)])
             .ToOption();
 
-      public Option<(string Name, int Version)> EventRevision(Type eventType) =>
-         Try(() => _typeRevisionMap[eventType.AssemblyQualifiedName])
+      public Option<(string Name, int Version)> EventRevision(Type eventDataType) =>
+         Try(() => _typeRevisionMap[eventDataType.AssemblyQualifiedName])
             .ToOption();
 
       private static string RevisionKey(string name, int version) =>
@@ -46,15 +46,21 @@ namespace SimpleCQRS
 
       public static EventRegistry Cons(Seq<Assembly> assemblies) =>
          assemblies
-            .SelectMany(s => s.GetTypes())
-            .Where(p => EventDataMarker.IsAssignableFrom(p) && p.IsClass && p.IsSealed)
+            .SelectMany(x => x.GetTypes())
+            .Where(x => EventDataMarker.IsAssignableFrom(x) && x.IsClass && x.IsSealed)
             .ToSeq()
-            .Map(eType => eType
-               .GetCustomAttributes(typeof(EventDataAttribute), false)
-               .ToSeq()
-               .Map(x => x as EventDataAttribute)
-               .Head()
-               .Apply(x => (x.Name, x.Version, eType)))
-            .Apply(x => new EventRegistry(x));
+            .Map(ToNameVersionType)
+            .Apply(Cons);
+
+      public static EventRegistry Cons(Seq<(string eventName, int eventVersion, Type eventDataType)> mappings) =>
+         new EventRegistry(mappings);
+
+      private static (string Name, int Version, Type EventDataType) ToNameVersionType(Type eventDataType) =>
+         eventDataType
+            .GetCustomAttributes(typeof(EventDataAttribute), false)
+            .ToSeq()
+            .Map(x => x as EventDataAttribute)
+            .Head()
+            .Apply(x => (x.Name, x.Version, eventDataType));
    }
 }

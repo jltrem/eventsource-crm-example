@@ -9,7 +9,7 @@ namespace SimpleCQRS
       Func<DateTimeOffset> UtcNow { get; }
    }
 
-   public class TimeService : ITimeService
+   public sealed class TimeService : ITimeService
    {
       public Func<DateTimeOffset> UtcNow { get; }
 

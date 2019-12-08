@@ -5,7 +5,7 @@ using static CRM.Domain.Types.StringExt;
 
 namespace CRM.Domain.Types
 {
-   public class CompanyName : Record<CompanyName>
+   public sealed class CompanyName : Record<CompanyName>
    {
       public string Name { get; }
 
