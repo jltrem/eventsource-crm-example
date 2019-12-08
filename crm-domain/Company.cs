@@ -25,7 +25,7 @@ namespace CRM.Domain
          var company = aggregate as Company;
          if (company == null) throw new Exception("Company.Apply provided invalid aggregate");
 
-         switch (e.EventData)
+         switch (e.Data)
          {
             case CompanyCreated created:
                if (version != 1) throw new Exception("event CompanyCreated is only valid for version 1");

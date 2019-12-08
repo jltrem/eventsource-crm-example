@@ -27,7 +27,7 @@ namespace CRM.Domain
          var contact = aggregate as Contact;
          if (contact == null) throw new Exception("Contact.Apply provided invalid aggregate");
 
-         switch (e.EventData)
+         switch (e.Data)
          {
             case ContactCreated created:
                if (version != 1) throw new Exception("event ContactCreated is only valid for version 1");

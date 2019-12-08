@@ -41,8 +41,6 @@ namespace CRM.Webapp
 
       public int EventVersion { get; set; }
 
-      public string DataType { get; set; }
-
       public string Data { get; set; }
 
       public DateTimeOffset Timestamp { get; set; }
