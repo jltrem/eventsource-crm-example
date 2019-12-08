@@ -11,6 +11,7 @@ namespace CRM.Domain
       public const string Created = "contact-created";
       public const string Renamed = "contact-renamed";
       public const string PhoneAdded = "contact-phone-added";
+      public const string PhoneUpdated = "contact-phone-updated";
    }
 
    [EventData(ContactEvent.Created, 1)]
@@ -42,6 +43,19 @@ namespace CRM.Domain
       public PhoneNumber Phone { get; }
 
       public ContactPhoneAdded(Guid phoneId, PhoneNumber phone)
+      {
+         PhoneId = phoneId;
+         Phone = phone;
+      }
+   }
+
+   [EventData(ContactEvent.PhoneUpdated, 1)]
+   public sealed class ContactPhoneUpdated : IEventData
+   {
+      public Guid PhoneId { get; }
+      public PhoneNumber Phone { get; }
+
+      public ContactPhoneUpdated(Guid phoneId, PhoneNumber phone)
       {
          PhoneId = phoneId;
          Phone = phone;

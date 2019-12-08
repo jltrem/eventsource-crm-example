@@ -44,6 +44,11 @@ namespace CRM.Domain
                contact.Phones = contact.Phones.Add(phoneAdded.PhoneId, phoneAdded.Phone);
                break;
 
+            case ContactPhoneUpdated phoneUpdated:
+               if (!contact.Phones.ContainsKey(phoneUpdated.PhoneId)) throw new Exception("event ContactPhoneUpdated id not found");
+               contact.Phones = contact.Phones.AddOrUpdate(phoneUpdated.PhoneId, phoneUpdated.Phone);
+               break;
+
             default:
                throw new Exception("Contact.Apply provided unexpected event");
          }
