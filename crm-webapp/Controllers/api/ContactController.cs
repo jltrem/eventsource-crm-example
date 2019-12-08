@@ -10,13 +10,13 @@ using System.Net.Mime;
 
 namespace CRM.Webapp.Controllers.api
 {
-   [Route("api/command/contact")]
+   [Route("api/contact")]
    [ApiController]
-   public class ContactCommandsController : ControllerBase
+   public class ContactController : ControllerBase
    {
       private readonly ICommandBus _bus;
 
-      public ContactCommandsController(ICommandBus bus)
+      public ContactController(ICommandBus bus)
       {
          _bus = bus;
       }
@@ -41,7 +41,7 @@ namespace CRM.Webapp.Controllers.api
            Left: error => BadRequest(error) as ActionResult);
       }
 
-      [HttpPost("{rootId}")]
+      [HttpPut("{rootId}")]
       [Consumes(MediaTypeNames.Application.Json)]
       [ProducesResponseType(StatusCodes.Status200OK)]
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -55,7 +55,7 @@ namespace CRM.Webapp.Controllers.api
          var result = await cmd.Result.Wait();
 
          return result.Value.Match(
-           Right: _ => CreatedAtAction(nameof(GetByRootId), new { rootId = cmd.RootId }, null),
+           Right: _ => Ok(),
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
@@ -70,12 +70,13 @@ namespace CRM.Webapp.Controllers.api
 
          return result.Value.Match(
 
-            // TODO: make a nice DTO to expose
-           Right: contact => new JsonResult(new { aggregate = contact.Item1, events = contact.Item2 } ),
+           // TODO: make a nice DTO to expose
+           Right: contact => new JsonResult(new { aggregate = contact.Item1, events = contact.Item2 }),
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
       }
+
    }
 
    public class CreateContact

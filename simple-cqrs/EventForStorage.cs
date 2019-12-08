@@ -5,22 +5,6 @@ using System.Text;
 
 namespace SimpleCQRS
 {
-   public class EventDTO : Record<EventDTO>
-   {
-      public string Name { get; }
-      public int Version { get; }
-      public object Data { get; }
-      public Type DataType { get; }
-
-      public EventDTO(string name, int version, object data, Type dataType)
-      {
-         Name = name;
-         Version = version;
-         Data = data;
-         DataType = dataType;
-      }
-   }
-
    public class AggregateInfo : Record<AggregateInfo>
    {
       public string Name { get; }
@@ -35,28 +19,33 @@ namespace SimpleCQRS
       }
    }
 
+   /// <summary>
+   /// This marks an event data class.
+   /// </summary>
+   public interface IEventData { }
 
-   public class EventForStorage : Record<EventForStorage>
+   public static class EventDataExt
    {
-      public AggregateInfo Aggregate { get; }
-      public DateTimeOffset Timestamp { get; }
-      public string Owner { get; }
-      public EventDTO DTO { get; }
-
-      public EventForStorage(AggregateInfo aggregate, DateTimeOffset timestamp, string owner, EventDTO dto)
-      {
-         Aggregate = aggregate;
-         Timestamp = timestamp;
-         Owner = owner ?? "";
-         DTO = dto;
-      }
+      public static (string Name, int Version) Revision(this IEventData e) =>
+         e.GetType()
+            .GetCustomAttributes(typeof(EventDataAttribute), false)
+            .ToSeq()
+            .Map(x => x as EventDataAttribute)
+            .Head()
+            .Apply(x => (x.Name, x.Version));
    }
 
-   /// <summary>
-   /// This marks an event data class, but not its DTO.
-   /// </summary>
-   public interface IEventData 
-   { 
+   [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+   public sealed class EventDataAttribute : Attribute
+   {
+      public string Name { get; }
+      public int Version { get; }
+
+      public EventDataAttribute(string name, int version)
+      {
+         Name = name;
+         Version = version;
+      }
    }
 
    public class Event
@@ -64,7 +53,7 @@ namespace SimpleCQRS
       public AggregateInfo AggregateInfo { get; }
       public DateTimeOffset Timestamp { get; }
       public string Owner { get; }
-      public IEventData EventData { get; }
+      public IEventData Data { get; }
 
 
       public Event(AggregateInfo info, DateTimeOffset timestamp, string owner, IEventData data)
@@ -72,7 +61,7 @@ namespace SimpleCQRS
          AggregateInfo = info;
          Timestamp = timestamp;
          Owner = owner ?? "";
-         EventData = data;
+         Data = data;
       }
    }
 }

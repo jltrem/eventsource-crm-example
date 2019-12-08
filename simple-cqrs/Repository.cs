@@ -38,7 +38,7 @@ namespace SimpleCQRS
       public Either<string, Unit> Save(T aggregate) =>
          aggregate
             .NewEvents
-            .Map(x => new EventForStorage(x.AggregateInfo, x.Timestamp, x.Owner, new EventDTO("foo", 42, x.EventData, x.EventData.GetType())))
+            .Map(x => new Event(x.AggregateInfo, x.Timestamp, x.Owner, x.Data))
             .Map(x => _storage.AddEvent(x))
             .Sequence()
             .Match(

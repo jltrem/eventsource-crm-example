@@ -8,7 +8,7 @@ namespace SimpleCQRS
    {
       Either<string, Seq<Event>> GetEvents(Guid rootId);
 
-      Either<string, Unit> AddEvent(EventForStorage e);
+      Either<string, Unit> AddEvent(Event e);
       Either<string, Unit> Save();
    }
 }
