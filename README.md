@@ -15,7 +15,7 @@ See Greg Young's [SimplestPossibleThing](https://github.com/gregoryyoung/m-r) CQ
 
 [LanguageExt](https://github.com/louthy/language-ext) is used throughout.
 
-The "web app" has no UI.  It is just an API to create, rename, and read a "contact" aggregate.  At this point only these minimal commands implemented.
+Currently the "web app" has no UI; it is just an API. At this point only a few minimal commands are implemented: create, rename, and read a "contact" aggregate.
 
 Look here to see the basic idea of what is involved in defining an aggregate:
 ```
@@ -24,7 +24,7 @@ crm-domain/ContactCommands.cs
 crm-domain/ContactCommandHandlers.cs
 ```
 
-connection string is in appsettings.json (EF will create the db):
+connection string is in appsettings.json:
 ```
 "AggregateEventStore": "Data Source=127.0.0.1;Database=EventsourceCrmExample;Trusted_Connection=True"
 ```
@@ -33,3 +33,5 @@ Actual interaction with db (via EF):
 ```
 crm-webapp/EventStore.cs
 ```
+
+Install the .NET Core EF tooling with `dotnet tool install --global dotnet-ef`.  You can then create an empty database with `dotnet ef database update`.
