@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SimpleCQRS;
 using LanguageExt;
+using static LanguageExt.Prelude;
 using System.Net.Mime;
+using CRM.Domain.DTO;
 
 namespace CRM.Webapp.Controllers.api
 {
@@ -28,7 +30,7 @@ namespace CRM.Webapp.Controllers.api
       public async Task<ActionResult> Create(CreateContact model)
       {
          var cmd = new Domain.Types.PersonalName(model.Given, model.Middle, model.Family)
-            .Apply(x => new Domain.CreateContact(x));
+            .Apply(x => new Domain.Aggregates.CreateContact(x));
 
          var sent = _bus.Send(cmd);
 
@@ -48,7 +50,7 @@ namespace CRM.Webapp.Controllers.api
       public async Task<ActionResult> Rename(Guid rootId, [FromBody] RenameContact model)
       {
          var cmd = new Domain.Types.PersonalName(model.Given, model.Middle, model.Family)
-            .Apply(x => new Domain.RenameContact(rootId, model.OriginalVersion, x));
+            .Apply(x => new Domain.Aggregates.RenameContact(rootId, model.OriginalVersion, x));
 
          var sent = _bus.Send(cmd);
 
@@ -68,7 +70,7 @@ namespace CRM.Webapp.Controllers.api
       public async Task<ActionResult> AddPhone(Guid rootId, [FromBody] AddOrUpdatePhone model)
       {
          var cmd = new Domain.Types.PhoneNumber(model.PhoneType, model.Number, model.Ext)
-            .Apply(x => new Domain.AddContactPhone(rootId, model.OriginalVersion, x));
+            .Apply(x => new Domain.Aggregates.AddContactPhone(rootId, model.OriginalVersion, x));
 
          var sent = _bus.Send(cmd);
 
@@ -88,7 +90,7 @@ namespace CRM.Webapp.Controllers.api
       public async Task<ActionResult> AddPhone(Guid rootId, Guid phoneId, [FromBody] AddOrUpdatePhone model)
       {
          var cmd = new Domain.Types.PhoneNumber(model.PhoneType, model.Number, model.Ext)
-            .Apply(x => new Domain.UpdateContactPhone(rootId, model.OriginalVersion, phoneId, x));
+            .Apply(x => new Domain.Aggregates.UpdateContactPhone(rootId, model.OriginalVersion, phoneId, x));
 
          var sent = _bus.Send(cmd);
 
@@ -104,25 +106,36 @@ namespace CRM.Webapp.Controllers.api
       [HttpGet("{rootId}")]
       public async Task<ActionResult> GetByRootId(Guid rootId)
       {
-         var cmd = new Domain.ReadContact(rootId);
+         var cmd = new Domain.Aggregates.ReadContact(rootId);
          var sent = _bus.Send(cmd);
          var result = await cmd.Result.Wait();
 
          return result.Value.Match(
 
-           // TODO: make a nice DTO to expose
-           Right: contact =>
-           {
-              var json = Newtonsoft.Json.JsonConvert.SerializeObject(contact.Item1);
-              return Content(json, "application/json");
-              //new JsonResult(new { aggregate = contact.Item1, events = contact.Item2 })
-           },
-           
+            Right: contact =>
+            {
+               var agg = head(contact);
+               var data = Contact.Cons(agg);
+               return new Aggregate<Contact>(agg.Info, data)
+                  .Apply(ToJsonContent);
+            },
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
       }
 
+      private readonly Newtonsoft.Json.JsonSerializerSettings _jsonSerializerSettings = new Newtonsoft.Json.JsonSerializerSettings
+         {
+            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+            Converters = new List<Newtonsoft.Json.JsonConverter>
+            {
+               new Newtonsoft.Json.Converters.StringEnumConverter()
+            }
+         };
+
+      private ContentResult ToJsonContent<T>(T value) where T : class =>         
+         Newtonsoft.Json.JsonConvert.SerializeObject(value, _jsonSerializerSettings)
+            .Apply(json => Content(json, "application/json"));
    }
 
    public class CreateContact
