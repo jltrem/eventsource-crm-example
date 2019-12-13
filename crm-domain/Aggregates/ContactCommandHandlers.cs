@@ -3,7 +3,7 @@ using SimpleCQRS;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
-namespace CRM.Domain
+namespace CRM.Domain.Aggregates
 {
    public sealed class ContactCommandHandlers : CommandHandlers<Contact>, IDisposable
    {

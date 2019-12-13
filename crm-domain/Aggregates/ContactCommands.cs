@@ -3,7 +3,7 @@ using SimpleCQRS;
 using LanguageExt;
 using CRM.Domain.Types;
 
-namespace CRM.Domain
+namespace CRM.Domain.Aggregates
 {
    public sealed class ReadContact : ReadAggregate<Contact>
    {

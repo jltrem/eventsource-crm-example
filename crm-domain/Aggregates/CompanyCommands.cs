@@ -2,7 +2,7 @@
 using CRM.Domain.Types;
 using SimpleCQRS;
 
-namespace CRM.Domain
+namespace CRM.Domain.Aggregates
 {
    public sealed class CreateCompany : CreateRootCommand
    {
