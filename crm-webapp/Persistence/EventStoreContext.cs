@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt;
 using static LanguageExt.Prelude;
-using System.Linq.Expressions;
-using System.Reflection;
 
-namespace CRM.Webapp
+namespace CRM.Persistence
 {
    public class EventStoreContext : DbContext
    {
@@ -40,7 +37,16 @@ namespace CRM.Webapp
       {
          builder
             .Entity<AggregateEvent>()
-            .HasKey(x => new { x.RootId, x.AggregateVersion });
+            .HasKey(x => x.Id);
+
+         builder
+            .Entity<AggregateEvent>()
+            .Property(p => p.Id)
+            .HasColumnType("bigint");
+
+         builder
+            .Entity<AggregateEvent>()
+            .HasIndex(x => new { x.RootId, x.AggregateVersion });
 
          builder.Entity<AggregateEvent>()
             .HasIndex(x => new { x.AggregateName });
@@ -64,6 +70,7 @@ namespace CRM.Webapp
 
    public class AggregateEvent
    {
+      public long Id { get; set; }
       public Guid RootId { get; set; }     
       public int AggregateVersion { get; set; }
       public string AggregateName { get; set; }
