@@ -2,12 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
-namespace CRM.Webapp
+namespace CRM.Persistence
 {
    public class EventStore : IEventStore
    {

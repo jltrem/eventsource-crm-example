@@ -33,7 +33,7 @@ namespace CRM.Webapp
       {
          services.AddControllers();
 
-         services.AddDbContext<EventStoreContext>(x => x.UseSqlServer(Configuration["ConnectionStrings:AggregateEventStore"]));
+         services.AddDbContext<Persistence.EventStoreContext>(x => x.UseSqlServer(Configuration["ConnectionStrings:AggregateEventStore"]));
 
          services.AddSingleton<ICommandBus>(_ => new CommandBus());
          services.AddSingleton<Domain.ContactCommandHandlers>();
@@ -43,7 +43,7 @@ namespace CRM.Webapp
          services.AddTransient<ITimeService>(_ => new TimeService(() => DateTimeOffset.UtcNow));
          services.AddTransient<ISecurityPrincipalService>(_ => new SecurityPrincipalService());
 
-         services.AddScoped<IEventStore>(x => new EventStore(x.GetService<EventStoreContext>(), x.GetService<IEventRegistry>()));
+         services.AddScoped<IEventStore>(x => new Persistence.EventStore(x.GetService<Persistence.EventStoreContext>(), x.GetService<IEventRegistry>()));
          services.AddScoped<IRepository<Domain.Contact>>(x => new Repository<Domain.Contact>(x.GetService<IEventStore>()));
       }
 
