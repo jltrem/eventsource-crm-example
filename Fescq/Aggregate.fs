@@ -3,15 +3,10 @@
 type Agg<'entity> = {
    Key: AggregateKey
    Entity: 'entity
+   NewEvents: Event list
 }
 
 module Aggregate = 
-
-   let noEvents = List<Event>.Empty
-   let oneEvent e = List<Event>.Cons(e, [])
-
-   let applyEvent last (update:int*Event) =
-      last
 
    /// Apply all events with the provided folder function.
    /// This function must validate domain rules so that construction 
@@ -46,13 +41,12 @@ module Aggregate =
          |> snd
 
       { Key = key
-        Entity = entity }
+        Entity = entity
+        NewEvents = future }
 
-   let createFromHistoryPlusOne<'entity> (apply:(int*'entity) -> Event -> (int*'entity)) (empty:'entity) (history:Event list) (newEvent:Event) =
-      newEvent 
-      |> oneEvent
-      |> create apply empty history
+   let createWithNewEvent<'entity> (apply:(int*'entity) -> Event -> (int*'entity)) (empty:'entity) (history:Event list) (newEvent:Event) =       
+      create apply empty history [newEvent]
 
    let createFromHistory<'entity> (apply:(int*'entity) -> Event -> (int*'entity)) (empty:'entity) (history:Event list) =
-      noEvents
-      |> create apply empty history
+      create apply empty history []
+
