@@ -8,10 +8,13 @@ type Agg<'entity> = {
 
 module Aggregate = 
 
+   // State is a (version, entity) pair
+   type EventFolder<'entity> = (int*'entity) -> Event -> (int*'entity)
+
    /// Apply all events with the provided folder function.
    /// This function must validate domain rules so that construction 
    /// is successful IFF the state is valid
-   let create<'entity> (apply:(int*'entity) -> Event -> (int*'entity)) (empty:'entity) (history:Event list) (future:Event list)  =
+   let create<'entity> (apply:EventFolder<'entity>) (empty:'entity) (history:Event list) (future:Event list)  =
 
       let events = 
          history @ future
@@ -44,9 +47,9 @@ module Aggregate =
         Entity = entity
         NewEvents = future }
 
-   let createWithNewEvent<'entity> (apply:(int*'entity) -> Event -> (int*'entity)) (empty:'entity) (history:Event list) (newEvent:Event) =       
+   let createWithNewEvent<'entity> (apply:EventFolder<'entity>) (empty:'entity) (history:Event list) (newEvent:Event) =       
       create apply empty history [newEvent]
 
-   let createFromHistory<'entity> (apply:(int*'entity) -> Event -> (int*'entity)) (empty:'entity) (history:Event list) =
+   let createFromHistory<'entity> (apply:EventFolder<'entity>) (empty:'entity) (history:Event list) =
       create apply empty history []
 
