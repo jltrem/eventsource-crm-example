@@ -9,8 +9,8 @@
     <Compile Include="Command.fs" />
     <Compile Include="CommandBus.fs" />
     <Compile Include="Aggregate.fs" />
-    <Compile Include="EventStore.fs" />
     <Compile Include="Repository.fs" />
+    <Compile Include="CommandHandler.fs" />
   </ItemGroup>
 
   <ItemGroup>

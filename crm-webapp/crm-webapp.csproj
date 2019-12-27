@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\crm-domain\crm-domain.csproj" />
-    <ProjectReference Include="..\simple-cqrs\simple-cqrs.csproj" />
+    <ProjectReference Include="..\Fescq\Fescq.fsproj" />
   </ItemGroup>
 
 </Project>

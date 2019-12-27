@@ -1,4 +1,4 @@
-﻿namespace Fescq.Core
+﻿namespace Fescq
 
 open System;
 
@@ -24,3 +24,14 @@ type Event = {
    MetaData: string
    EventData: IEventData
 }
+
+type Agg<'entity> = {
+   Key: AggregateKey
+   Entity: 'entity
+   History: Event list
+}
+
+type IEventStore =
+   abstract member GetEvents : Guid -> Result<Event list, string>
+   abstract member AddEvent : Event -> Result<unit, string>
+   abstract member Save : unit -> Result<unit, string>

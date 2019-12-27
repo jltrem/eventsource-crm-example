@@ -1,19 +1,15 @@
-﻿namespace Fescq.Core
+﻿namespace Fescq
 
 open System
+open Fescq.Aggregate
 
 type IRepository<'t> =
 
-   abstract member Save : Agg<'t> -> Result<Agg<'t>, string>
+   abstract member Save : Agg<'t> * Event list -> Result<Agg<'t>, string>
 
    /// input: aggregate ID * factory
    /// output: aggregate * history
    abstract member Load : Guid * (Event list -> Result<Agg<'t>, string>) -> Result<(Agg<'t> * Event list), string>
-
-
-
-type IUseRepository<'t> =
-   abstract member UseRepo : Action<IRepository<'t>> -> unit
 
 
 type Repository<'t> (storage:IEventStore) =
@@ -30,12 +26,14 @@ type Repository<'t> (storage:IEventStore) =
                )
             )
 
-      member x.Save (aggregate:Agg<'t>) =
-         if aggregate.NewEvents.Length > 0 then
-            aggregate.NewEvents
+      member x.Save (aggregate:Agg<'t>, unpersisted:Event list) =
+         if aggregate.History.Length > 0 
+            && unpersisted.Length > 0
+            && (List.last unpersisted) = (List.last aggregate.History) then
             
             // bail at the first error
             // https://stackoverflow.com/a/26890974/571637
+            unpersisted
             |> List.unfold (fun events ->
                   match events with 
                   | head :: tail ->
@@ -46,9 +44,9 @@ type Repository<'t> (storage:IEventStore) =
 
             |> List.last 
             |> Result.bind storage.Save
-            |> Result.bind (fun _ -> { aggregate with NewEvents = [] } |> Ok)
+            |> Result.bind (fun _ -> aggregate |> Ok)
          else
-            aggregate |> Ok
+            Error "unpersisted events must be part of aggregate history"
 
 (*
 

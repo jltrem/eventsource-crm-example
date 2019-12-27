@@ -1,6 +1,6 @@
-﻿namespace Fescq.Command
+﻿module Fescq.Command
 
-open Fescq.Core
+open Fescq
 open System
 open System.Reactive.Subjects
 open System.Reactive.Linq;
