@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" Version="3.3.39" />
+    <PackageReference Include="LanguageExt.FSharp" Version="3.3.39" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.0">
@@ -15,11 +16,11 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.0.0" />
-    <PackageReference Include="System.Reactive" Version="4.2.0" />
+    <PackageReference Include="System.Reactive" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\crm-domain\crm-domain.csproj" />
+    <ProjectReference Include="..\crm-domain-fs\crm-domain-fs.fsproj" />
     <ProjectReference Include="..\Fescq\Fescq.fsproj" />
   </ItemGroup>
 

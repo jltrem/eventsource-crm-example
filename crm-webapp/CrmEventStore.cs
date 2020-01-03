@@ -1,24 +1,52 @@
-﻿using SimpleCQRS;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using LanguageExt;
-using static LanguageExt.Prelude;
+using Fescq;
 
-namespace CRM.Persistence
+namespace CRM.Webapp
 {
-   public class EventStore : IEventStore
+   public class CrmEventStore
    {
       private readonly EventStoreContext _db;
-      private readonly IEventRegistry _registry;
 
-      public EventStore(EventStoreContext db, IEventRegistry registry)
+      public CrmEventStore(EventStoreContext db)
       {
          _db = db;
-         _registry = registry;
       }
 
+      public List<AggregateEvent> GetAggregateEvents(Guid aggregateId) =>
+         _db.AggregateEvents
+            .Where(x => x.RootId == aggregateId)
+            .OrderBy(x => x.AggregateVersion)
+            .ToList();
+
+      public void Add(Event e, (string name, int version) revision, Type dtoType)
+      {
+         var data = new AggregateEvent
+         {
+            RootId = e.AggregateKey.Id,
+            AggregateVersion = e.AggregateKey.Version,
+            AggregateName = e.AggregateKey.Name,
+            EventName = revision.name,
+            EventVersion = revision.version,
+            EventData = JsonConvert.SerializeObject(e.EventData, dtoType, new JsonSerializerSettings
+            {
+               Formatting = Formatting.None,
+               TypeNameHandling = TypeNameHandling.None
+            }),
+            Timestamp = e.Timestamp,
+            Owner = e.MetaData
+         };
+
+         _db.AggregateEvents.Add(data);
+      }
+
+      public void Save() =>
+         _db.SaveChanges();
+
+/*
       public Either<string, Seq<Event>> GetEvents(Guid rootId) =>
          Try(() =>
             _db.AggregateEvents
@@ -45,7 +73,7 @@ namespace CRM.Persistence
          var dto = JsonConvert.DeserializeObject(aggEvent.EventData, dtoType) as IEventData;
          if (dto == null) throw new Exception($"event could not be deserialized: (rootId={aggEvent.RootId}, version={aggEvent.AggregateVersion})");
 
-         var info = new AggregateInfo(aggEvent.AggregateName, aggEvent.RootId, aggEvent.AggregateVersion);
+         var info = new AggregateKey(aggEvent.AggregateName, aggEvent.RootId, aggEvent.AggregateVersion);
          return new Event(info, aggEvent.Timestamp, aggEvent.Owner, dto);
       }
 
@@ -56,9 +84,9 @@ namespace CRM.Persistence
                {
                   var data = new AggregateEvent
                   {
-                     RootId = e.AggregateInfo.RootId,
-                     AggregateVersion = e.AggregateInfo.Version,
-                     AggregateName = e.AggregateInfo.Name,
+                     RootId = e.AggregateKey.Id,
+                     AggregateVersion = e.AggregateKey.Version,
+                     AggregateName = e.AggregateKey.Name,
                      EventName = revision.Name,
                      EventVersion = revision.Version,
                      EventData = JsonConvert.SerializeObject(e.EventData, dtoType, new JsonSerializerSettings
@@ -67,13 +95,13 @@ namespace CRM.Persistence
                         TypeNameHandling = TypeNameHandling.None
                      }),
                      Timestamp = e.Timestamp,
-                     Owner = e.Owner
+                     Owner = e.MetaData
                   };
 
                   _db.AggregateEvents.Add(data);
                   return Unit.Default;
                },
-               None: () => throw new Exception($"event not registered for aggregate: (rootId={e.AggregateInfo.RootId}, version={e.AggregateInfo.Version})"))
+               None: () => throw new Exception($"event not registered for aggregate: (Id={e.AggregateKey.Id}, Version={e.AggregateKey.Version})"))
             )
          )
          .Match<Unit, Either<string, Unit>>(
@@ -89,6 +117,6 @@ namespace CRM.Persistence
          .Match<Unit, Either<string, Unit>>(
             Succ: x => Right(x),
             Fail: ex => Left(ex.Message));
-
+*/
    }
 }

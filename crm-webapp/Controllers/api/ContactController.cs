@@ -4,11 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SimpleCQRS;
 using LanguageExt;
 using static LanguageExt.Prelude;
+using static LanguageExt.FSharp;
 using System.Net.Mime;
-using CRM.Domain.DTO;
+using Fescq;
+using ES = Fescq.EventStoreHelper;
+using Domain = CRM.Domain;
 
 namespace CRM.Webapp.Controllers.api
 {
@@ -16,12 +18,14 @@ namespace CRM.Webapp.Controllers.api
    [ApiController]
    public class ContactController : ControllerBase
    {
-      private readonly ICommandBus _bus;
+      private readonly IEventStore _store;
 
-      public ContactController(ICommandBus bus)
+      public ContactController(IEventStore store)
       {
-         _bus = bus;
+         _store = store;
       }
+
+      private DateTimeOffset TimestampNow { get { return DateTimeOffset.UtcNow; } }
 
       [HttpPost("create")]
       [Consumes(MediaTypeNames.Application.Json)]
@@ -29,18 +33,22 @@ namespace CRM.Webapp.Controllers.api
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
       public async Task<ActionResult> Create(CreateContact model)
       {
-         var cmd = new Domain.Types.PersonalName(model.Given, model.Middle, model.Family)
-            .Apply(x => new Domain.Aggregates.CreateContact(x));
+         var name = new Domain.PersonalName(model.Given, model.Middle, model.Family);
+         var cmd = new Domain.Aggregate.Contact.CreateContact(name);
 
-         var sent = _bus.Send(cmd);
+         var (aggregate, events) = Domain.Aggregate.Contact.Handle.create(TimestampNow, "foo meta data", cmd);
 
-         var result = await cmd.Result.Wait();
-
-         return result.Value.Match(
-           Right: _ => CreatedAtAction(nameof(GetByRootId), new { rootId = cmd.RootId }, null),
-
-            // TODO: don't bubble up any native exception messages
-           Left: error => BadRequest(error) as ActionResult);
+         if (events.Length == 1)
+         {
+            var (ok, error) = ES.AddEvent(_store, events[0]);
+            return fs(ok).Match(
+               Some: _ => CreatedAtAction(nameof(GetByRootId), new { rootId = aggregate.Key.Id }, null),
+               None: () => BadRequest(fs(error).IfNone("unknown error")) as ActionResult);
+         }
+         else
+         {
+            return BadRequest("could not create contact");
+         }
       }
 
       [HttpPut("{rootId}/rename")]
@@ -49,8 +57,8 @@ namespace CRM.Webapp.Controllers.api
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
       public async Task<ActionResult> Rename(Guid rootId, [FromBody] RenameContact model)
       {
-         var cmd = new Domain.Types.PersonalName(model.Given, model.Middle, model.Family)
-            .Apply(x => new Domain.Aggregates.RenameContact(rootId, model.OriginalVersion, x));
+         var cmd = new Domain.PersonalName(model.Given, model.Middle, model.Family)
+            .Apply(x => new Domain.Aggregate.Contact.RenameContact(rootId, model.OriginalVersion, x));
 
          var sent = _bus.Send(cmd);
 
@@ -69,8 +77,8 @@ namespace CRM.Webapp.Controllers.api
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
       public async Task<ActionResult> AddPhone(Guid rootId, [FromBody] AddOrUpdatePhone model)
       {
-         var cmd = new Domain.Types.PhoneNumber(model.PhoneType, model.Number, model.Ext)
-            .Apply(x => new Domain.Aggregates.AddContactPhone(rootId, model.OriginalVersion, x));
+         var cmd = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext)
+            .Apply(x => new Domain.Aggregate.Contact.AddContactPhone(rootId, model.OriginalVersion, x));
 
          var sent = _bus.Send(cmd);
 
@@ -89,8 +97,8 @@ namespace CRM.Webapp.Controllers.api
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
       public async Task<ActionResult> AddPhone(Guid rootId, Guid phoneId, [FromBody] AddOrUpdatePhone model)
       {
-         var cmd = new Domain.Types.PhoneNumber(model.PhoneType, model.Number, model.Ext)
-            .Apply(x => new Domain.Aggregates.UpdateContactPhone(rootId, model.OriginalVersion, phoneId, x));
+         var cmd = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext)
+            .Apply(x => new Domain.Aggregate.Contact.UpdateContactPhone(rootId, model.OriginalVersion, phoneId, x));
 
          var sent = _bus.Send(cmd);
 
@@ -103,10 +111,13 @@ namespace CRM.Webapp.Controllers.api
            Left: error => BadRequest(error) as ActionResult);
       }
 
+
       [HttpGet("{rootId}")]
       public async Task<ActionResult> GetByRootId(Guid rootId)
       {
-         var cmd = new Domain.Aggregates.ReadContact(rootId);
+         return BadRequest("unimplemented");
+#if never
+         var cmd = new Domain.Aggregate.Contact.ReadContact(rootId);
          var sent = _bus.Send(cmd);
          var result = await cmd.Result.Wait();
 
@@ -122,7 +133,9 @@ namespace CRM.Webapp.Controllers.api
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
+#endif
       }
+
 
       private readonly Newtonsoft.Json.JsonSerializerSettings _jsonSerializerSettings = new Newtonsoft.Json.JsonSerializerSettings
          {
@@ -156,6 +169,17 @@ namespace CRM.Webapp.Controllers.api
       public string PhoneType { get; set; }
       public string Number { get; set; }
       public string Ext { get; set; }
+
+      public Domain.PhoneType PhoneTypeAsEnum() =>
+         PhoneType
+            .ToLower()
+            .Apply(x => x switch
+               {
+                  "mobile" => Domain.PhoneType.Mobile,
+                  "work" => Domain.PhoneType.Work,
+                  "home" => Domain.PhoneType.Home,
+                  _ => Domain.PhoneType.Unknown
+               });
    }
 
 }

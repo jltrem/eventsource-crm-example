@@ -35,3 +35,15 @@ type IEventStore =
    abstract member GetEvents : Guid -> Result<Event list, string>
    abstract member AddEvent : Event -> Result<unit, string>
    abstract member Save : unit -> Result<unit, string>
+  
+
+type EventRegistry = private {
+   RevisionTypeMap: Map<string, Type>
+   TypeRevisionMap: Map<string, struct (string*int)>
+}
+
+type EventTypeInfo = {
+   Name: string
+   Version: int
+   DataType: Type 
+}

@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using SimpleCQRS;
+using Fescq;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -35,38 +35,13 @@ namespace CRM.Webapp
 
          services.AddDbContext<Persistence.EventStoreContext>(x => x.UseSqlServer(Configuration["ConnectionStrings:AggregateEventStore"]));
 
-         services.AddSingleton<ICommandBus>(_ => new CommandBus());
-         services.AddSingleton<Domain.Aggregates.ContactCommandHandlers>();
-         services.AddSingleton<IUseRepo<Domain.Aggregates.Contact>>(x => new UseContactRepo(x));
-         services.AddSingleton<IEventRegistry>(_ => CreateEventRegistry());
+         services.AddSingleton(_ => new CrmEventRegistry());
 
          services.AddTransient<ITimeService>(_ => new TimeService(() => DateTimeOffset.UtcNow));
          services.AddTransient<ISecurityPrincipalService>(_ => new SecurityPrincipalService());
 
          services.AddScoped<IEventStore>(x => new Persistence.EventStore(x.GetService<Persistence.EventStoreContext>(), x.GetService<IEventRegistry>()));
          services.AddScoped<IRepository<Domain.Aggregates.Contact>>(x => new Repository<Domain.Aggregates.Contact>(x.GetService<IEventStore>()));
-      }
-
-      private static EventRegistry CreateEventRegistry() =>
-         AppDomain.CurrentDomain.GetAssemblies()
-         .ToSeq()
-         .Apply(EventRegistry.Cons);
-
-      public class UseContactRepo : IUseRepo<Domain.Aggregates.Contact>
-      {
-         private readonly IServiceProvider _serviceProvider;
-
-         public UseContactRepo(IServiceProvider serviceProvider)
-         {
-            _serviceProvider = serviceProvider;
-         }
-
-         public void UseRepo(Action<IRepository<Domain.Aggregates.Contact>> action)
-         {
-            using var scope = _serviceProvider.CreateScope();
-            var repo = scope.ServiceProvider.GetRequiredService<IRepository<Domain.Aggregates.Contact>>();
-            action(repo);
-         }
       }
 
       // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

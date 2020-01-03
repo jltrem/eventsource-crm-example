@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
-namespace CRM.Persistence
+namespace CRM.Webapp
 {
    public class EventStoreContext : DbContext
    {
