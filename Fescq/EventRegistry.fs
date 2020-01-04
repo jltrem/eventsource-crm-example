@@ -7,11 +7,11 @@ open System.Reflection
 let private revisionKey name version = 
    sprintf "%s-%i" name version
 
-let eventType (registry:EventRegistry, name:string, version:int) =
+let eventType (registry:EventRegistry) (name:string) (version:int) =
    revisionKey name version
    |> registry.RevisionTypeMap.TryFind
 
-let eventRevision (registry:EventRegistry, dataType:Type) =
+let eventRevision (registry:EventRegistry) (dataType:Type) =
    dataType.AssemblyQualifiedName
    |> registry.TypeRevisionMap.TryFind
 

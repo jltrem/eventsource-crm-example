@@ -26,29 +26,25 @@ namespace CRM.Webapp
 
       public IConfiguration Configuration { get; }
 
-      private Domain.Aggregates.ContactCommandHandlers ContactCommandHandlers { get; set; }
-
       // This method gets called by the runtime. Use this method to add services to the container.
       public void ConfigureServices(IServiceCollection services)
       {
          services.AddControllers();
 
-         services.AddDbContext<Persistence.EventStoreContext>(x => x.UseSqlServer(Configuration["ConnectionStrings:AggregateEventStore"]));
+         services.AddDbContext<EventStoreContext>(x => x.UseSqlServer(Configuration["ConnectionStrings:AggregateEventStore"]));
 
-         services.AddSingleton(_ => new CrmEventRegistry());
+         services.AddSingleton<CrmEventRegistry>();
 
          services.AddTransient<ITimeService>(_ => new TimeService(() => DateTimeOffset.UtcNow));
          services.AddTransient<ISecurityPrincipalService>(_ => new SecurityPrincipalService());
 
-         services.AddScoped<IEventStore>(x => new Persistence.EventStore(x.GetService<Persistence.EventStoreContext>(), x.GetService<IEventRegistry>()));
+         services.AddScoped<CrmEventStore>();
          services.AddScoped<IRepository<Domain.Aggregates.Contact>>(x => new Repository<Domain.Aggregates.Contact>(x.GetService<IEventStore>()));
       }
 
       // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
       public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Domain.Aggregates.ContactCommandHandlers contactHandlers)
       {
-         ContactCommandHandlers = contactHandlers;
-
          if (env.IsDevelopment())
          {
             app.UseDeveloperExceptionPage();

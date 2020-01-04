@@ -9,8 +9,8 @@ using static LanguageExt.Prelude;
 using static LanguageExt.FSharp;
 using System.Net.Mime;
 using Fescq;
-using ES = Fescq.EventStoreHelper;
 using Domain = CRM.Domain;
+using ES = Fescq.EventStoreCSharp;
 
 namespace CRM.Webapp.Controllers.api
 {
@@ -20,9 +20,9 @@ namespace CRM.Webapp.Controllers.api
    {
       private readonly IEventStore _store;
 
-      public ContactController(IEventStore store)
+      public ContactController(CrmEventStore store)
       {
-         _store = store;
+         _store = store.EventStore;
       }
 
       private DateTimeOffset TimestampNow { get { return DateTimeOffset.UtcNow; } }
