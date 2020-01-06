@@ -8,8 +8,8 @@ type IRepository<'t> =
    abstract member Save : Agg<'t> * Event list -> Result<Agg<'t>, string>
 
    /// input: aggregate ID * factory
-   /// output: aggregate * history
-   abstract member Load : Guid * (Event list -> Result<Agg<'t>, string>) -> Result<(Agg<'t> * Event list), string>
+   /// output: aggregate
+   abstract member Load : Guid * (Event list -> Result<Agg<'t>, string>) -> Result<Agg<'t>, string>
 
 
 type Repository<'t> (storage:IEventStore) =
@@ -22,8 +22,6 @@ type Repository<'t> (storage:IEventStore) =
          |> Result.bind (fun events ->
                events
                |> factory
-               |> Result.bind (fun agg -> Ok (agg, events)
-               )
             )
 
       member x.Save (aggregate:Agg<'t>, unpersisted:Event list) =

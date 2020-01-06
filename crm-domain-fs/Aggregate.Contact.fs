@@ -34,24 +34,34 @@ type ContactCommand =
    | UpdatePhone of UpdateContactPhone
 
 // only public constructor for ContactCommand
-let validateCommand command =
+let validateCommand (command:Fescq.Command.ICommand) =
    match command with 
-   | Create cmd ->
+   
+   | :? CreateContact -> 
+      let cmd = command :?> CreateContact
       cmd.Name 
       |> Validate.personalName
       |> Option.map (fun _ -> cmd |> ContactCommand.Create)
-   | Rename cmd -> 
+   
+   | :? RenameContact -> 
+      let cmd = command :?> RenameContact
       cmd.Name 
       |> Validate.personalName
       |> Option.map (fun _ -> cmd |> ContactCommand.Rename)
-   | AddPhone cmd -> 
+   
+   | :? AddContactPhone -> 
+      let cmd = command :?> AddContactPhone
       cmd.Phone
       |> Validate.phoneNumber
       |> Option.map (fun _ -> cmd |> ContactCommand.AddPhone)
-   | UpdatePhone cmd -> 
+   
+   | :? UpdateContactPhone -> 
+      let cmd = command :?> UpdateContactPhone
       cmd.Phone
       |> Validate.phoneNumber
       |> Option.map (fun _ -> cmd |> ContactCommand.UpdatePhone)
+   
+   | _ -> failwith "unexpected command"
 
 
 [<EventData("contact-created", 1)>]
@@ -149,22 +159,68 @@ module Handle =
       |> Aggregate.createWithFirstEvent apply
 
    
-   let update utcNow metaData command (aggregate:Agg<Contact>) =
+   let update utcNow metaData (command:Fescq.Command.ICommand) (aggregate:Agg<Contact>) =
 
-      match command with 
-      | Create cmd -> ContactCreated(cmd.Name) :> IEventData, cmd |> aggId
-      | Rename cmd -> ContactRenamed(cmd.Name) :> IEventData, cmd |> aggId
-      | AddPhone cmd -> ContactPhoneAdded(cmd.DetailId, cmd.Phone) :> IEventData, cmd |> aggId
-      | UpdatePhone cmd -> ContactPhoneUpdated(cmd.DetailId, cmd.Phone) :> IEventData, cmd |> aggId
+      try
+         command
+         |> validateCommand 
+         |> function 
+            | Some cmd ->
+               match cmd with 
+               | Create cmd -> ContactCreated(cmd.Name) :> IEventData, cmd |> aggId
+               | Rename cmd -> ContactRenamed(cmd.Name) :> IEventData, cmd |> aggId
+               | AddPhone cmd -> ContactPhoneAdded(cmd.DetailId, cmd.Phone) :> IEventData, cmd |> aggId
+               | UpdatePhone cmd -> ContactPhoneUpdated(cmd.DetailId, cmd.Phone) :> IEventData, cmd |> aggId
+            | None -> failwith "data validation failed"
 
-      |> fun (eventData, aggId) ->
-         if aggId = aggregate.Key.Id then
+         |> fun (eventData, aggId) ->
+            if aggId = aggregate.Key.Id then
 
-            { AggregateKey = { aggregate.Key with Version = aggregate.Key.Version + 1 }
-              Timestamp = utcNow
-              MetaData = metaData
-              EventData = eventData }
-            |> Aggregate.createWithNextEvent apply aggregate.History 
-            |> Ok
-         else 
-            Error "aggregate and command refer to different ids"
+               { AggregateKey = { aggregate.Key with Version = aggregate.Key.Version + 1 }
+                 Timestamp = utcNow
+                 MetaData = metaData
+                 EventData = eventData }
+               |> Aggregate.createWithNextEvent apply aggregate.History 
+               |> Ok
+            else 
+               Error "aggregate and command refer to different ids"
+      with
+         ex -> Error ex.Message
+
+   module CSharp = 
+   
+      let Update utcNow metaData command aggregate =
+         update utcNow metaData command aggregate
+         |> function
+            | Ok agg -> struct (Some struct (fst agg, snd agg), None)
+            | Error msg -> struct (None, Some msg)
+
+module Storage =
+   
+   let load (store:IEventStore) (aggId:Guid) = 
+
+      let factory history = 
+         try
+            let (agg, _) = Aggregate.createFromHistory<Contact> apply history
+            Ok agg
+         with 
+            ex -> Error ex.Message
+
+      Repository<Contact> store
+      :> IRepository<Contact>
+      |> fun x -> x.Load(aggId, factory)
+
+   let save (store:IEventStore) (update:Agg<Contact> * Event list) =
+
+      Repository<Contact> store
+      :> IRepository<Contact>
+      |> fun x -> x.Save(fst update, snd update)
+
+   module CSharp = 
+      
+      let Load (store:IEventStore, aggId:Guid) =
+         load store aggId
+         |> function
+            | Ok agg -> struct (Some agg, None)
+            | Error msg -> struct (None, Some msg)
+

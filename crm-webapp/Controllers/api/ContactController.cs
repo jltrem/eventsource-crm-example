@@ -9,7 +9,6 @@ using static LanguageExt.Prelude;
 using static LanguageExt.FSharp;
 using System.Net.Mime;
 using Fescq;
-using Domain = CRM.Domain;
 using ES = Fescq.EventStoreCSharp;
 
 namespace CRM.Webapp.Controllers.api
@@ -55,27 +54,34 @@ namespace CRM.Webapp.Controllers.api
          }
       }
 
-      [HttpPut("{rootId}/rename")]
+      [HttpPut("{aggregateId}/rename")]
       [Consumes(MediaTypeNames.Application.Json)]
       [ProducesResponseType(StatusCodes.Status200OK)]
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
-      public async Task<ActionResult> Rename(Guid rootId, [FromBody] RenameContact model)
+      public async Task<ActionResult> Rename(Guid aggregateId, [FromBody] RenameContact model)
       {
-         throw new NotImplementedException();
-         /*
-         var cmd = new Domain.PersonalName(model.Given, model.Middle, model.Family)
-            .Apply(x => new Domain.Aggregate.Contact.RenameContact(rootId, model.OriginalVersion, x));
+         var name = new Domain.PersonalName(model.Given, model.Middle, model.Family);
+         var cmd = new Domain.Aggregate.Contact.RenameContact(aggregateId, model.OriginalVersion, name);
 
-         var sent = _bus.Send(cmd);
 
-         var result = await cmd.Result.Wait();
+         var (aggregate, loadError) = CRM.Domain.Aggregate.Contact.Storage.CSharp.Load(_store, aggregateId);
 
-         return result.Value.Match(
-           Right: _ => Ok(),
 
-           // TODO: don't bubble up any native exception messages
-           Left: error => BadRequest(error) as ActionResult);
-           */
+         return fs(aggregate).Match(
+            Some: agg =>
+            {
+
+               
+               var (update, updateError) = Domain.Aggregate.Contact.Handle.CSharp.Update(TimestampNow, "foo meta data", cmd, agg);
+               return fs(update).Match(
+                  Some: update =>
+                  {
+                     CRM.Domain.Aggregate.Contact.Storage.save(_store, update.Item1, update.Item2);
+                     return Ok();
+                  },
+                  None: () => BadRequest(fs(updateError).IfNone("unknown error")) as ActionResult);
+            },
+            None: () => BadRequest(fs(loadError).IfNone("unknown error")) as ActionResult);
       }
 
       [HttpPut("{rootId}/add-phone")]

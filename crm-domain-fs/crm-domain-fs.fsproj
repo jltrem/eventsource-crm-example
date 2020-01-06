@@ -5,6 +5,11 @@
     <RootNamespace>crm_domain_fs</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="Types.fs" />
     <Compile Include="Aggregate.Contact.fs" />
