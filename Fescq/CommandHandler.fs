@@ -17,16 +17,3 @@ type CommandHandler<'t> (useRepo:Action<Action<IRepository<'t>>>, utcNow:Func<Da
       { Name = x.Name
         Id = cmd.AggregateId
         Version = version }
-
-
-// These abstractions can be used for DI
-type IRepositoryProvider<'t> =
-   abstract member UseRepo : Action<Action<IRepository<'t>>>
-
-type ITimeProvider =
-   abstract member UtcNow : Func<DateTimeOffset>
-
-type ISecurityPrincipalProvider =
-   abstract member ActiveUserName : Func<string>
-
-

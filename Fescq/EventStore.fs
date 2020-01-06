@@ -20,7 +20,7 @@ type EventStore (registry:EventRegistry, getEvents:GetEvents, addEvent:AddEvent,
 
       member x.AddEvent e : Result<unit, string> = 
          try
-            let dtoType = e.GetType()
+            let dtoType = e.EventData.GetType()
             
             eventRevision registry dtoType
             |> function
@@ -53,7 +53,7 @@ module EventStoreCSharp =
    let AddEvent (eventStore:IEventStore, event:Event) =       
       eventStore.AddEvent event
       |> function
-         | Ok ok -> struct (Some ok, None)
+         | Ok _ -> struct (Some 1, None)
          | Error msg -> struct (None, Some msg)
    
    let Save (eventStore:IEventStore) = 

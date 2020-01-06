@@ -35,15 +35,12 @@ namespace CRM.Webapp
 
          services.AddSingleton<CrmEventRegistry>();
 
-         services.AddTransient<ITimeService>(_ => new TimeService(() => DateTimeOffset.UtcNow));
-         services.AddTransient<ISecurityPrincipalService>(_ => new SecurityPrincipalService());
-
          services.AddScoped<CrmEventStore>();
-         services.AddScoped<IRepository<Domain.Aggregates.Contact>>(x => new Repository<Domain.Aggregates.Contact>(x.GetService<IEventStore>()));
+         services.AddScoped<IRepository<Domain.Aggregate.Contact.Contact>>(x => new Repository<Domain.Aggregate.Contact.Contact>(x.GetService<IEventStore>()));
       }
 
       // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-      public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Domain.Aggregates.ContactCommandHandlers contactHandlers)
+      public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
       {
          if (env.IsDevelopment())
          {

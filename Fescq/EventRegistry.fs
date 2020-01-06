@@ -45,7 +45,7 @@ let createForAssemblies (assemblies:seq<Assembly>) =
    let eventDataMarker = typeof<IEventData>
    assemblies
    |> Seq.collect (fun x -> x.GetTypes())
-   |> Seq.filter (fun x -> eventDataMarker.IsAssignableFrom(x) && x.IsClass && x.IsSealed)
+   |> Seq.filter (fun x -> eventDataMarker.IsAssignableFrom(x) && x.IsClass)
    |> Seq.map toEventTypeInfo
    |> create
 

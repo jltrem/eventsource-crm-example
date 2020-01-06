@@ -8,18 +8,18 @@ namespace CRM.Webapp
 {
    public class CrmEventRegistry
    {
-      private readonly EventRegistry _registry;
+      public EventRegistry Registry { get; }
 
       public CrmEventRegistry()
       {
          var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-         _registry = createForAssemblies(assemblies);         
+         Registry = createForAssemblies(assemblies);         
       }
 
       public Option<Type> EventType(string name, int version) =>
-         fs(eventType(_registry, name, version));
+         fs(eventType(Registry, name, version));
 
       public Option<(string Name, int Version)> EventRevision(Type dataType) =>
-         fs(eventRevision(_registry, dataType));
+         fs(eventRevision(Registry, dataType));
    }
 }

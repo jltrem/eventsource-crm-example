@@ -42,7 +42,11 @@ namespace CRM.Webapp.Controllers.api
          {
             var (ok, error) = ES.AddEvent(_store, events[0]);
             return fs(ok).Match(
-               Some: _ => CreatedAtAction(nameof(GetByRootId), new { rootId = aggregate.Key.Id }, null),
+               Some: _ =>
+               {
+                  ES.Save(_store);
+                  return CreatedAtAction(nameof(GetByRootId), new { rootId = aggregate.Key.Id }, null);
+               },
                None: () => BadRequest(fs(error).IfNone("unknown error")) as ActionResult);
          }
          else
@@ -57,6 +61,8 @@ namespace CRM.Webapp.Controllers.api
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
       public async Task<ActionResult> Rename(Guid rootId, [FromBody] RenameContact model)
       {
+         throw new NotImplementedException();
+         /*
          var cmd = new Domain.PersonalName(model.Given, model.Middle, model.Family)
             .Apply(x => new Domain.Aggregate.Contact.RenameContact(rootId, model.OriginalVersion, x));
 
@@ -69,6 +75,7 @@ namespace CRM.Webapp.Controllers.api
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
+           */
       }
 
       [HttpPut("{rootId}/add-phone")]
@@ -77,6 +84,9 @@ namespace CRM.Webapp.Controllers.api
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
       public async Task<ActionResult> AddPhone(Guid rootId, [FromBody] AddOrUpdatePhone model)
       {
+         throw new NotImplementedException();
+         /*
+
          var cmd = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext)
             .Apply(x => new Domain.Aggregate.Contact.AddContactPhone(rootId, model.OriginalVersion, x));
 
@@ -89,6 +99,7 @@ namespace CRM.Webapp.Controllers.api
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
+           */
       }
 
       [HttpPut("{rootId}/update-phone/{phoneId}")]
@@ -97,6 +108,9 @@ namespace CRM.Webapp.Controllers.api
       [ProducesResponseType(StatusCodes.Status400BadRequest)]
       public async Task<ActionResult> AddPhone(Guid rootId, Guid phoneId, [FromBody] AddOrUpdatePhone model)
       {
+         throw new NotImplementedException();
+         /*
+
          var cmd = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext)
             .Apply(x => new Domain.Aggregate.Contact.UpdateContactPhone(rootId, model.OriginalVersion, phoneId, x));
 
@@ -109,14 +123,15 @@ namespace CRM.Webapp.Controllers.api
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
+           */
       }
 
 
       [HttpGet("{rootId}")]
       public async Task<ActionResult> GetByRootId(Guid rootId)
       {
-         return BadRequest("unimplemented");
-#if never
+         throw new NotImplementedException();
+         /*
          var cmd = new Domain.Aggregate.Contact.ReadContact(rootId);
          var sent = _bus.Send(cmd);
          var result = await cmd.Result.Wait();
@@ -133,7 +148,7 @@ namespace CRM.Webapp.Controllers.api
 
            // TODO: don't bubble up any native exception messages
            Left: error => BadRequest(error) as ActionResult);
-#endif
+*/
       }
 
 

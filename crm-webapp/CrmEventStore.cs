@@ -15,10 +15,10 @@ namespace CRM.Webapp
 
       public EventStore EventStore { get; }
 
-      public CrmEventStore(EventStoreContext db, EventRegistry registry)
+      public CrmEventStore(EventStoreContext db, CrmEventRegistry registry)
       {
          _db = db;
-         EventStore = new EventStore(registry, GetEvents, AddEvent, Save);
+         EventStore = new EventStore(registry.Registry, GetEvents, AddEvent, Save);
       }
 
       private static string SerializeEventDto(IEventData eventData, Type dtoType) =>
