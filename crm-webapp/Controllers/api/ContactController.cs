@@ -11,6 +11,12 @@ using System.Net.Mime;
 using Fescq;
 using ES = Fescq.EventStoreCSharp;
 
+// TODO: enforce originalVersion concurrency check
+// TODO: return aggregateId/version/[detailId] on POST or PUT
+// TODO: return aggregateId/version with GET
+// TODO: move guts of Update(Guid aggregateId, Command.ICommand cmd) to crm-domain-fs + Fescq
+// TODO: metadata
+
 namespace CRM.Webapp.Controllers.api
 {
    [Route("api/contact")]
@@ -44,7 +50,7 @@ namespace CRM.Webapp.Controllers.api
                Some: _ =>
                {
                   ES.Save(_store);
-                  return CreatedAtAction(nameof(GetByRootId), new { rootId = aggregate.Key.Id }, null);
+                  return CreatedAtAction(nameof(GetAggregate), new { aggregateId = aggregate.Key.Id }, null);
                },
                None: () => BadRequest(fs(error).IfNone("unknown error")) as ActionResult);
          }
@@ -62,16 +68,64 @@ namespace CRM.Webapp.Controllers.api
       {
          var name = new Domain.PersonalName(model.Given, model.Middle, model.Family);
          var cmd = new Domain.Aggregate.Contact.RenameContact(aggregateId, model.OriginalVersion, name);
+         return Update(aggregateId, cmd);
+      }
+     
+      [HttpPut("{aggregateId}/add-phone")]
+      [Consumes(MediaTypeNames.Application.Json)]
+      [ProducesResponseType(StatusCodes.Status200OK)]
+      [ProducesResponseType(StatusCodes.Status400BadRequest)]
+      public async Task<ActionResult> AddPhone(Guid aggregateId, [FromBody] AddOrUpdatePhone model)
+      {
+         var phone = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext);
+         var cmd = new Domain.Aggregate.Contact.AddContactPhone(aggregateId, model.OriginalVersion, phone);
+         return Update(aggregateId, cmd);
+      }
 
+      [HttpPut("{aggregateId}/update-phone/{phoneId}")]
+      [Consumes(MediaTypeNames.Application.Json)]
+      [ProducesResponseType(StatusCodes.Status200OK)]
+      [ProducesResponseType(StatusCodes.Status400BadRequest)]
+      public async Task<ActionResult> AddPhone(Guid aggregateId, Guid phoneId, [FromBody] AddOrUpdatePhone model)
+      {
+         var phone = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext);
+         var cmd = new Domain.Aggregate.Contact.UpdateContactPhone(aggregateId, model.OriginalVersion, phoneId, phone);
+         return Update(aggregateId, cmd);
+      }
 
+      [HttpGet("{aggregateId}")]
+      public async Task<ActionResult> GetAggregate(Guid aggregateId)
+      {
          var (aggregate, loadError) = CRM.Domain.Aggregate.Contact.Storage.CSharp.Load(_store, aggregateId);
+         return fs(aggregate).Match(
+            Some: agg => ToJsonContent(agg.Entity),
+            None: () => BadRequest(fs(loadError).IfNone("unknown error")) as ActionResult);
+      }
 
 
+      private readonly Newtonsoft.Json.JsonSerializerSettings _jsonSerializerSettings = 
+         new Newtonsoft.Json.JsonSerializerSettings
+            {
+               ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+               Converters = new List<Newtonsoft.Json.JsonConverter>
+                  {
+                     new Newtonsoft.Json.Converters.StringEnumConverter()
+                  }
+            };
+
+      private ContentResult ToJsonContent<T>(T value) where T : class =>         
+         Newtonsoft.Json.JsonConvert.SerializeObject(value, _jsonSerializerSettings)
+            .Apply(json => Content(json, "application/json"));
+
+      private ActionResult Update(Guid aggregateId, Command.ICommand cmd)
+      {
+         // TODO: move this ugliness to crm-domain-fs & only deal with the HTTP response here
+         var (aggregate, loadError) = CRM.Domain.Aggregate.Contact.Storage.CSharp.Load(_store, aggregateId);
          return fs(aggregate).Match(
             Some: agg =>
             {
 
-               
+
                var (update, updateError) = Domain.Aggregate.Contact.Handle.CSharp.Update(TimestampNow, "foo meta data", cmd, agg);
                return fs(update).Match(
                   Some: update =>
@@ -83,93 +137,6 @@ namespace CRM.Webapp.Controllers.api
             },
             None: () => BadRequest(fs(loadError).IfNone("unknown error")) as ActionResult);
       }
-
-      [HttpPut("{rootId}/add-phone")]
-      [Consumes(MediaTypeNames.Application.Json)]
-      [ProducesResponseType(StatusCodes.Status200OK)]
-      [ProducesResponseType(StatusCodes.Status400BadRequest)]
-      public async Task<ActionResult> AddPhone(Guid rootId, [FromBody] AddOrUpdatePhone model)
-      {
-         throw new NotImplementedException();
-         /*
-
-         var cmd = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext)
-            .Apply(x => new Domain.Aggregate.Contact.AddContactPhone(rootId, model.OriginalVersion, x));
-
-         var sent = _bus.Send(cmd);
-
-         var result = await cmd.Result.Wait();
-
-         return result.Value.Match(
-           Right: _ => Ok(),
-
-           // TODO: don't bubble up any native exception messages
-           Left: error => BadRequest(error) as ActionResult);
-           */
-      }
-
-      [HttpPut("{rootId}/update-phone/{phoneId}")]
-      [Consumes(MediaTypeNames.Application.Json)]
-      [ProducesResponseType(StatusCodes.Status200OK)]
-      [ProducesResponseType(StatusCodes.Status400BadRequest)]
-      public async Task<ActionResult> AddPhone(Guid rootId, Guid phoneId, [FromBody] AddOrUpdatePhone model)
-      {
-         throw new NotImplementedException();
-         /*
-
-         var cmd = new Domain.PhoneNumber(model.PhoneTypeAsEnum(), model.Number, model.Ext)
-            .Apply(x => new Domain.Aggregate.Contact.UpdateContactPhone(rootId, model.OriginalVersion, phoneId, x));
-
-         var sent = _bus.Send(cmd);
-
-         var result = await cmd.Result.Wait();
-
-         return result.Value.Match(
-           Right: _ => Ok(),
-
-           // TODO: don't bubble up any native exception messages
-           Left: error => BadRequest(error) as ActionResult);
-           */
-      }
-
-
-      [HttpGet("{rootId}")]
-      public async Task<ActionResult> GetByRootId(Guid rootId)
-      {
-         throw new NotImplementedException();
-         /*
-         var cmd = new Domain.Aggregate.Contact.ReadContact(rootId);
-         var sent = _bus.Send(cmd);
-         var result = await cmd.Result.Wait();
-
-         return result.Value.Match(
-
-            Right: contact =>
-            {
-               var agg = head(contact);
-               var data = Contact.Cons(agg);
-               return new Aggregate<Contact>(agg.Info, data)
-                  .Apply(ToJsonContent);
-            },
-
-           // TODO: don't bubble up any native exception messages
-           Left: error => BadRequest(error) as ActionResult);
-*/
-      }
-
-
-      private readonly Newtonsoft.Json.JsonSerializerSettings _jsonSerializerSettings = new Newtonsoft.Json.JsonSerializerSettings
-         {
-            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
-            Converters = new List<Newtonsoft.Json.JsonConverter>
-            {
-               new Newtonsoft.Json.Converters.StringEnumConverter()
-            }
-         };
-
-      private ContentResult ToJsonContent<T>(T value) where T : class =>         
-         Newtonsoft.Json.JsonConvert.SerializeObject(value, _jsonSerializerSettings)
-            .Apply(json => Content(json, "application/json"));
    }
 
    public class CreateContact
