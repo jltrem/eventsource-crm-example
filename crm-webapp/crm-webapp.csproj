@@ -21,7 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\crm-domain-fs\crm-domain-fs.fsproj" />
-    <ProjectReference Include="..\Fescq\Fescq.fsproj" />
   </ItemGroup>
 
 </Project>

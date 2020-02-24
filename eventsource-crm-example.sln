@@ -5,13 +5,9 @@ VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "crm-webapp", "crm-webapp\crm-webapp.csproj", "{57C12FE2-F2BC-4AD3-A3B1-B878B6DC549D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "simple-cqrs", "simple-cqrs\simple-cqrs.csproj", "{FFF85E06-0785-468B-8499-8FB4B73E01A6}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "crm-domain", "crm-domain\crm-domain.csproj", "{9A45AE46-1566-4B5F-9926-E5A0DFF4004F}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fescq", "Fescq\Fescq.fsproj", "{7BC69B81-52D9-4840-A6DF-6123B35574FB}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "crm-domain-fs", "crm-domain-fs\crm-domain-fs.fsproj", "{E7BD7399-FDA8-4256-B06F-724A88CC16AA}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "crm-domain-fs", "crm-domain-fs\crm-domain-fs.fsproj", "{E7BD7399-FDA8-4256-B06F-724A88CC16AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,18 +19,10 @@ Global
 		{57C12FE2-F2BC-4AD3-A3B1-B878B6DC549D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57C12FE2-F2BC-4AD3-A3B1-B878B6DC549D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57C12FE2-F2BC-4AD3-A3B1-B878B6DC549D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FFF85E06-0785-468B-8499-8FB4B73E01A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FFF85E06-0785-468B-8499-8FB4B73E01A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FFF85E06-0785-468B-8499-8FB4B73E01A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FFF85E06-0785-468B-8499-8FB4B73E01A6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9A45AE46-1566-4B5F-9926-E5A0DFF4004F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9A45AE46-1566-4B5F-9926-E5A0DFF4004F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A45AE46-1566-4B5F-9926-E5A0DFF4004F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A45AE46-1566-4B5F-9926-E5A0DFF4004F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7BC69B81-52D9-4840-A6DF-6123B35574FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7BC69B81-52D9-4840-A6DF-6123B35574FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7BC69B81-52D9-4840-A6DF-6123B35574FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7BC69B81-52D9-4840-A6DF-6123B35574FB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E7BD7399-FDA8-4256-B06F-724A88CC16AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7BD7399-FDA8-4256-B06F-724A88CC16AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7BD7399-FDA8-4256-B06F-724A88CC16AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
